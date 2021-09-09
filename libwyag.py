@@ -57,29 +57,36 @@ class GitRepository(object):
 
         if not force:
             vers = int(self.conf.get("core", "repositoryformatversion"))
-            if vers != 0
-            raise Exception("Unsupported repositoryformatversion %s" %vers)
+            if vers != 0:
+                raise Exception("Unsupported repositoryformatversion %s" %vers)
 
 
     # Utility function for manipulating paths in the repository
-    def repo_path(repo, *path):
-        """Compute path under repo's gitdir"""
-        return os.path.join(repo.gitdir, *path)
+def repo_path(repo, *path):
+    """Compute path under repo's gitdir"""
+    return os.path.join(repo.gitdir, *path)
 
-    # Function to return a path to a file or directory
-    def repo_file(repo, *path, mkdir=False):
-        """Same as repo_path, but create dirname(*path) if absent.  For
-        example, repo_file(r, \"refs\", \"remotes\", \"origin\", \"HEAD\") will create
-        .git/refs/remotes/origin."""
-        if repo_dir(repo, *path[:-1], mkdir=mkdir):
-            return repo_path(repo, *path)
+# Function to return a path to a file or directory
+def repo_file(repo, *path, mkdir=False):
+    """Same as repo_path, but create dirname(*path) if absent.  For
+    example, repo_file(r, \"refs\", \"remotes\", \"origin\", \"HEAD\") will create
+    .git/refs/remotes/origin."""
+    if repo_dir(repo, *path[:-1], mkdir=mkdir):
+        return repo_path(repo, *path)
 
-    def repo_dir(repo, *path, mkdir=False):
-        """Same as repo_path, but mkdir *path if mkdir is absent"""
-        path = repo_path(repo, *path)
+def repo_dir(repo, *path, mkdir=False):
+    """Same as repo_path, but mkdir *path if mkdir is absent"""
+    path = repo_path(repo, *path)
 
-        if os.path.exists(path):
-            if(os.path.isdir(path)):
-                return path
-            else:
-                return None
+    if os.path.exists(path):
+        if (os.path.isdir(path)):
+            return path
+        else:
+            raise Exception("Not a directory %s" % path)
+
+    if mkdir:
+        os.makedirs(path)
+        return path
+    else:
+        return None
+
