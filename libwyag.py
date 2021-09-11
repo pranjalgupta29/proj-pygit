@@ -4,6 +4,7 @@ import configparser
 from genericpath import isdir
 import hashlib
 import os
+from posix import listdir
 import re
 import sys
 import zlib
@@ -90,3 +91,42 @@ def repo_dir(repo, *path, mkdir=False):
     else:
         return None
 
+# Creating a new Repository
+def repo_create(path):
+    """Create a new Repository at a given path"""
+    repo = GitRepository(path, True)
+
+    # Making sure that the given path either doesn't exist or is an empty dir
+
+    if os.path.exists(repo.worktree):
+        if not os.path.isdir(repo.worktree):
+            raise Exception("%s is not a directory!" % path)
+        if os.listdir(repo.worktree):
+            raise Exception("%s is not empty!" % path)
+    else:
+        os.makedirs(repo.worktree)
+
+    assert(repo_dir(repo, "branches", mkdir=True))
+    assert(repo_dir(repo, "branches", mkdir=True))
+    assert(repo_dir(repo, "refs", "tags", mkdir=True))
+    assert(repo_dir(repo, "refs", "heads", mkdir=True))
+
+    # .git/description
+    with open(repo_file(repo, "description"), "w") as f:
+        f.write("ref:refs/heads/master\n")
+    
+    with open(repo_file(repo, "config"), "w") as f:
+        config = repo_default_config()
+        config.write(f)
+
+    return repo
+
+def repo_default_config():
+    ret = configparser.ConfigParser()
+
+    ret.add_section("core")
+    ret.set("core", "repositoryformatversion", "0")
+    ret.set("core", "filemode", "false")
+    ret.set("core", "bare", "false")
+
+    return ret
