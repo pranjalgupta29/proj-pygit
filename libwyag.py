@@ -237,3 +237,13 @@ def object_write(obj, actually_write=True):
             f.write(zlib.compress(result))
         
     return sha
+
+# Defining git-blob object
+class GitBlob(GitObject):
+    fmt=b'blob'
+
+    def serialize(self):
+        return self.blobdata
+
+    def deserialize(self, data):
+        self.blobdata = data
