@@ -208,10 +208,32 @@ def object_read(repo, sha):
         # Pick Constructor
         if fmt==b'commit'   :   c=GitCommit
         elif fmt==b'tree'   :   c=GitTree
-        elif fmt==b'tag'   :   c=GitTag
+        elif fmt==b'tag'    :   c=GitTag
         elif fmt==b'blob'   :   c=GitBlob
         else:
             raise Exception("Unknown type {0} for object {1}".format(fmt.decode("ascii"), sha))
 
         # Call constructor and return object
         return c(repo, raw[y+1:])
+
+# Writing an object. This is nothing but reading an 
+# object in reverse. We compute the hash, insert the header, 
+# zlib-compress everything and write the result in place
+
+def object_write(obj, actually_write=True):
+    # Serialize object data
+    data = obj.serialize()
+    # Add header
+    result = obj.fmt + b' ' + str(len(data)).encode() + b'\x00' + data
+    # Compute hash
+    sha = hashlib.sha1(result).hexdigest()
+
+    if actually_write:
+        # Compute path
+        path = repo_file(obj.repo, "objects", sha[0:2], sha[2:], mkdir=actually_write)
+
+        with open(path, 'wb') as f:
+            # Compress and write
+            f.write(zlib.compress(result))
+        
+    return sha
